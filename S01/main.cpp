@@ -2,9 +2,6 @@
 #include <unistd.h>
 int main()
 {
-    fork();
-    fork();
-    fork();
-    printf("hello\n");
+    execlp( "cat", "resultA.txt");
     return 0;
 }

@@ -13,7 +13,7 @@ int main() {
     int pid = fork();
 
     // Process A.
-    if (pid == 0) {
+    if (pid != 0) {
         // Set stdout of A to AtoB.
         dup2(AtoB[1], 1);
         // Set stdin of A to BtoA.
