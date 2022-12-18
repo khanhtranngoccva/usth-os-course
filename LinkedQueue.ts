@@ -13,17 +13,17 @@ export class LinkedQueue<T> {
     #length = 0;
     #firstNode?: LinkedNode<T>;
     #lastNode?: LinkedNode<T>;
+    pushAlgorithm?: (newItem: T, lastItem: T) => boolean;
 
     get length(): number {
         return this.#length;
     }
-
-    constructor(data: T[]) {
+    constructor(data?: T[]) {
+        if (data)
         for (let item of data) {
             this.add(item);
         }
     }
-
     add(item: T): number {
         const newNode = new LinkedNode(item);
         // No nodes?
@@ -31,8 +31,8 @@ export class LinkedQueue<T> {
             this.#firstNode = newNode;
             this.#lastNode = newNode;
         }
-        // If there's already a node.
-        else {
+        // If there's already a node, and there is no algorithm.
+        else if (!this.pushAlgorithm) {
             if (!this.#lastNode) {
                 throw new Error("Internal error.");
             }
@@ -40,6 +40,41 @@ export class LinkedQueue<T> {
             lastNode.next = newNode;
             newNode.prev = lastNode;
             this.#lastNode = newNode;
+        }
+        // There is an algorithm that tells where to push.
+        else {
+            let curNode = this.#firstNode;
+            if (!curNode) {
+                throw new Error("Internal error.");
+            }
+            while (curNode) {
+                const curNodeData = curNode.data;
+                if (!this.pushAlgorithm(curNodeData, item)) {
+                    break;
+                }
+                curNode = curNode.next;
+            }
+            if (!curNode) {
+                if (!this.#lastNode) {
+                    throw new Error("Internal error.");
+                }
+                const lastNode = this.#lastNode;
+                lastNode.next = newNode;
+                newNode.prev = lastNode;
+                this.#lastNode = newNode;
+            } else {
+                const prevNode = curNode.prev;
+                if (!prevNode) {
+                    this.#firstNode = newNode;
+                    curNode.prev = newNode;
+                    newNode.next = curNode;
+                } else {
+                    prevNode.next = newNode;
+                    curNode.prev = newNode;
+                    newNode.prev = prevNode;
+                    newNode.next = curNode;
+                }
+            }
         }
         this.#length++;
         return this.#length;
@@ -78,6 +113,5 @@ export class LinkedQueue<T> {
             }
         }
         console.log(values);
-
     }
 }

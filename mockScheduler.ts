@@ -1,5 +1,5 @@
 // Round-robin, FIFO, SJF
-import Linked
+import {LinkedQueue} from "./LinkedQueue";
 
 interface Program {
     runTime: number;
@@ -37,12 +37,15 @@ function createRandomExecutions(programs: Program[]): Execution[] {
 
 
 class FIFOScheduler {
-    #executions: OngoingExecution[];
+    #executions: LinkedQueue<OngoingExecution>;
 
     constructor(initialQueue: Execution[]) {
-        this.#executions = [];
+        this.#executions = new LinkedQueue();
+        this.#executions.pushAlgorithm = (execution1, execution2) => {
+            return execution1.startTime < execution2.startTime;
+        };
         for (let execution of executions) {
-
+            this.scheduleExecution(execution);
         }
     }
 
@@ -51,6 +54,11 @@ class FIFOScheduler {
             ...newExecution,
             remainingTime: newExecution.runTime,
         }
+        this.#executions.add(ongoingExecution);
+    }
+
+    display() {
+        this.#executions.display();
     }
 
     runExecutions() {
@@ -60,5 +68,5 @@ class FIFOScheduler {
 
 const programs = createPrograms(20);
 const executions = createRandomExecutions(programs);
-
-console.log(executions)
+const scheduler = new FIFOScheduler(executions);
+scheduler.display();
