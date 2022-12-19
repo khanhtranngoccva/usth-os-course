@@ -63,10 +63,11 @@ class FIFOScheduler {
 
     runExecutions() {
         let currentTime = 0;
+        this.#executions.display();
     }
 }
 
 const programs = createPrograms(20);
 const executions = createRandomExecutions(programs);
 const scheduler = new FIFOScheduler(executions);
-scheduler.display();
+scheduler.runExecutions();

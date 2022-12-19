@@ -75,7 +75,7 @@ public:
     }
 
     void dup2StdOut(int index) {
-        dup2(getStdOut(index), 1);
+        dup2(this->getStdOut(index), 1);
     }
 
     int getStdIn(int index) {
@@ -83,7 +83,7 @@ public:
     }
 
     void dup2StdIn(int index) {
-        dup2(getStdIn(index), 0);
+        dup2(this->getStdIn(index), 0);
     }
 
     void closeAll() {
@@ -181,32 +181,37 @@ int main() {
                 waitpid(pid, nullptr, 0);
             }
         } else {
-            // n commands - we create n - 1 pipes.
             auto pipedesList = new PipeList(linesList->length() - 1);
-//            pipedesList->display();/**/
-
-            int pid = fork();
-            for (int i = 0; i < linesList->length(); i++) {
-                if (pid != 0) {
-                    pid = fork();
-                } else {
-                    // First line!
-                    if (i == 0) {
-                        pipedesList->dup2StdOut(0);
-                        pipedesList->closeAll();
-                        execvp(linesList->get(i)[0], linesList->get(i));
-                    } else if (i == linesList->length() - 1) {
-                        pipedesList->dup2StdIn(i - 1);
-                        pipedesList->closeAll();
-                        execvp(linesList->get(i)[0], linesList->get(i));
+            int pidMain = fork();
+            if (pidMain == 0) {
+                int pid = fork();
+                for (int i = 0; i < linesList->length(); i++) {
+                    if (pid == 0) {
+                        pid = fork();
                     } else {
-                        pipedesList->dup2StdOut(i);
-                        pipedesList->dup2StdIn(i - 1);
-                        pipedesList->closeAll();
-                        execvp(linesList->get(i)[0], linesList->get(i));
+                        if (i == 0) {
+                            pipedesList->dup2StdOut(0);
+                            pipedesList->closeAll();
+                            execvp(linesList->get(i)[0], linesList->get(i));
+                        } else if (i == linesList->length() - 1) {
+                            pipedesList->dup2StdIn(i - 1);
+                            pipedesList->closeAll();
+                            execvp(linesList->get(i)[0], linesList->get(i));
+                        } else {
+                            pipedesList->dup2StdOut(i);
+                            pipedesList->dup2StdIn(i - 1);
+                            pipedesList->closeAll();
+                            execvp(linesList->get(i)[0], linesList->get(i));
+                        }
+                        waitpid(pid, nullptr, 0);
+                        exit(0);
                     }
-                    exit(0);
                 }
+                pipedesList->closeAll();
+                exit(0);
+            } else {
+                pipedesList->closeAll();
+                waitpid(pidMain, nullptr, 0);
             }
         }
     }
